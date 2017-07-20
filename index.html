@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="/Techies/DataTables-1.10.2/media/css/jquery.dataTables.css">
+  
+<!-- jQuery -->
+<script type="text/javascript"  src="/Techies/DataTables-1.10.2/media/js/jquery.js"></script>
+<!-- DataTables -->
+<script type="text/javascript"  src="/Techies/DataTables-1.10.2/media/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="/Techies/fire.pass.chars.js"></script>
+
+<style type="text/css">
+	
+        #wrap{
+		display: none;
+		opacity: 0.8;
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		padding: 16px;
+		background-color: rgba(1, 1, 1, 0.725);
+		z-index: 100;
+		overflow: auto;
+	}
+	
+	#window, #settingWin{
+		width: 80%;
+		height: 70%;
+		margin: 50px auto;
+		display: none;
+		background: #fff;
+		z-index: 200;
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		padding: 4px;
+                border-radius: 5px;
+                box-shadow:
+                0 1px 4px rgba(0, 0, 0, .3),
+                -23px 0 20px -23px rgba(0, 0, 0, .8),
+                23px 0 20px -23px rgba(0, 0, 0, .8),
+                0 0 40px rgba(0, 0, 0, .1) inset;
+                
+	}
+
+        #intotable {
+                overflow: auto; /* Добавляем полосы прокрутки */
+                //width: 200px; /* Ширина элемента */
+        }
+        
+        .typed-char {
+	border: 1px solid #c9c041;
+	background: #eed200;
+	padding: .1em .5em;
+	font-weight: bold;
+	text-shadow: #FFF 0px 1px 1px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	font-size: 12px;
+	font-family: Verdana;
+	-moz-box-shadow: 0 1px 3px #999;
+	-webkit-box-shadow: 0 1px 3px #999;
+        }
+        
+        
+	.close{
+		margin-left: 95%;
+		margin-top: 4px;
+		cursor: pointer;
+	}
+        
+        .save{
+                margin-left: 95%;
+		margin-bottom: 5%;
+                cursor: pointer;
+        }
+        
+</style>
+<script type="text/javascript">
+   var ind = -1; 
+   var mass = []; //данные из выбранной строки
+   var size = 0;
+   var sizetable = 50;
+   //var ScreenWidth = screen.width;
+   
+$(document).ready(function() {
+    nullMass();
+    //tr - строка(верхний тег)
+    showWindowSetting();
+     $('#tablewin').html("<table id='example' class='display' cellspacing='0'></table>");
+
+        $('#tablewin #example').append("<thead></thead>");
+
+                $('#tablewin #example thead:last').append("<tr></tr>");
+                for (var n = 0; n < sizetable; n++){
+                    $('#tablewin #example tr:last').append("<th>"+n+"."+n+"</th>");                
+              }
+  
+  
+    oTable = $('#example').DataTable( {
+        "sScrollX": "100%",
+        "sScrollXInner": "100%",
+        "bPaginate": false,
+        "bAutoWidth": false, 
+        "bSortable": false
+    } ); 
+
+    $('#example').parents('div.dataTables_wrapper').first().hide();//скрыть ДанныеТаблицы
+    $('#addRow').first().hide();//
+    $('#removeRow').first().hide();
+    $('#kostil').first().hide();
+    
+   
+   
+     $('#addRow').on( 'click', function () { //добавляем строку
+        oTable.$('tr.selected').removeClass('selected');
+        nullMass();
+        oTable.row.add(mass).draw(); //Сортирует по первому столбцу
+        ind = -1;
+        showWindow('block', null);
+    } );
+  
+        
+        
+        
+    $('#removeRow').on('click', function (){ //удаляем строку
+        oTable.row('.selected').remove().draw(false);      
+        size--;
+    });
+    
+    
+    $('#kostil').on('click',  function (){
+                if (ind === -1)
+                {
+                    oTable.row(size).data(mass).draw();
+                    size++;
+                }
+                else
+                {
+                    oTable.row('.selected').data(mass).draw();                 
+                }  
+                nullMass();
+                ind = 0;
+                printTable();
+    });
+    
+    
+    
+    $('#example tbody').on( 'dblclick', 'tr', function () {
+        if ( $(this).hasClass('selected') ) {
+            
+            $(this).removeClass('selected');
+        }
+        else 
+        {
+            oTable.$('tr.selected').removeClass('selected');
+            $(this).addClass('selected');
+            //var long_data = oTable.row( this ).data();//или так(full)
+            for (i=0;i<=sizetable;i++)
+                mass[i] = $('td', this).eq(i).text(); //или так(one coloumn)
+            
+            showWindow('block', null);
+        }
+    } );
+ 
+ 
+ 
+    function  nullMass()
+    {
+        for(var i = 0;i<sizetable;i++)
+             mass[i] = " ";
+     
+    }  
+} );
+
+
+
+
+    function updateTable()
+    {
+        if (ind === -1)
+                {
+                    oTable.row(size).data(mass).draw();
+                    size++;
+                }
+                else
+                {
+                    oTable.row('.selected').data(mass).draw();                 
+                } 
+                
+              
+        for(var i = 0;i<sizetable;i++)
+            mass[i] = " ";
+        
+        ind = 0;
+    }
+
+    
+    
+	function showWindow(state,butState)
+        {       	
+
+            switch(state)
+            {
+                case 'none':
+                    $('#window').fadeOut("1000");
+                    $('#wrap').fadeOut("1000");
+                    //////////////
+                    for (i=0;i<sizetable;i++) //получает по индексу столбца
+                        mass[i] = document.getElementById(i).value;
+                    /////////////
+                    if(butState === 'save')
+                    {
+                        updateTable();
+                        break;
+                    }
+                    else
+                    { 
+                        for(i=0;i<sizetable;i++)
+                            if(mass[i]!=="")
+                                return;
+                        oTable.row(size).remove().draw(false);      
+                        break;
+                    }
+                
+                case 'block':      
+                    $('#window').fadeIn("1000");
+                    $('#wrap').fadeIn("1000");
+                    $('#window').html("<center> </center>");
+                    $('#window center:first').append('<img align="right" class="close" onclick="showWindow(' + "'none'" + ',' + "'close'" + ');" src="pic/krestik.png">');
+                    $('#window center:first').append("<tr align='left'> </tr>");
+                    $('#window tr:first').append('<th><img align="left" id="specialist" style="margin: 20px 0 0 50px;" src="pic/specialist_small.png"></th>');
+                    for (var n = 0; n < sizetable; n++){
+                        $('window tr:last').append("<th> </th>");
+                    }
+                    $('#window center:first').append("<div id='intotable'> </div>");
+                    $('#window div:first').append("<tr align='center'></tr>");
+
+                    for (var n = 0; n < sizetable; n++){
+                        $('#window div:first').append("<th align='center'> <p>" + n + "</p> <input id='" + n + "'><label ></label> </th>");//название столбца
+                        if(n === sizetable-1)
+                            break;
+                        $('#window div:first').append("<th align='center'> <p>|</p> <p>|</p> </th>");
+
+                    }
+                    $('#window').append('<img align="right" id="krestik" class="save" onclick="showWindow(' + " 'none'" + ', ' + "'save'" + ');" src="pic/galka_little.png"> ');
+                    ////////////////
+                    for (i=0;i<sizetable;i++) //получает по индексу столбца
+                        document.getElementById(i).value = mass[i];
+                    //////////////// 
+                    break;
+                
+                default : break;
+            }
+    
+        };
+        
+
+
+        
+        function showWindowSetting()
+        {
+            if(ind === 0)
+            {
+                
+                $.ajax({
+                             url: "TechiesServlet",
+                             type: "POST",
+                             data: {"selectedItem":"selectItem","value":String($("select#bdsel").val())},
+                             success: function(data){
+                                $.each(JSON.parse(data), function(idx, obj) {
+                                    
+                                    //добить распаковку таблицы в таблицу
+                                    
+                                    $('#settingWin').fadeOut("1000");
+                                    $('#wrap').fadeOut("1000");
+                                    $('#example').parents('div.dataTables_wrapper').fadeIn("1000");
+                                    $('#addRow').fadeIn("1000");
+                                    $('#removeRow').fadeIn("1000");
+                                    $('#kostil').fadeIn("1000");
+                                    
+                                });     
+                                },
+                                dataType: "text"
+                        });
+
+                
+                
+            }
+            else
+            if (ind === 1)
+            {
+                var user = document.getElementById("User").value;
+                var pass = document.getElementById("pass").value;
+                switch(user){         
+                    case 'root':
+                        if(pass !== "q")
+                            {
+                                alert("No passwd");
+                                $('#pass').text("");
+                                break;
+                            }
+                        $('#User').fadeOut("1000");
+                        $('#pass').fadeOut("1000");
+                        $('#spec').fadeOut("1000");
+                        $('#psswd').fadeOut("1000");
+                        $('#usr').fadeOut("1000");
+                        $.ajax({
+                             url: "TechiesServlet",
+                             type: "POST",
+                             data: {"selectedItem":"table"},
+                             success: function(data){
+                                $.each(JSON.parse(data), function(idx, obj) {
+                                    $('#settingWin center:first').append('<select id = "bdsel" name="server"> </select>');
+                                    for(var i=0;i<obj.length;i++)
+                                    {          
+                                        $("#bdsel").append( $('<option value="'+ obj[i] + '">' + obj[i] + '</option>'));
+                                    }
+                                       
+                                        //$('#settingWin bdsel:first').append('<option>' + obj[i] + '</option>');
+                                    //$('#settingWin img:first').append('</select>');
+                                    $('#bdsel').fadeIn("1000"); 
+                                });     
+                                },
+                                dataType: "text"
+                        });
+                        
+                        
+                        ind = 0;
+                        break;
+                        
+                    default :
+                        alert("No user");
+                        break;
+                        
+                        
+                }
+                
+               
+            }
+            else
+            {
+                $('#settingWin').fadeIn("1000").css({'width': '40%', 'height': '70%'});
+                $('#wrap').fadeIn("1000");
+                $('#settingWin').html('<center></center>');   
+                $('#settingWin center:first').append('<th><img id="spec" align="left" style="margin: 20px 0 0 50px;" src="pic/specialist_vsmall.png"> </th>');
+                $('#settingWin center:first').append('<th> </th> <th> </th> <th> </th>');
+                $('#settingWin center:first').append('<p align="center" id="usr" >"User"</p> <input  id="User"><label></label>');
+                $('#settingWin center:first').append('<p id="psswd">"Password"</p> <form name="first-form" method="post"> <input type="password" id="pass" name="p1" /> </form>');
+                $('#settingWin center:first').append('<img align="right" class="save" onclick="showWindowSetting(' + "'none'" + ');" src="pic/galka_little.png">');
+                $('#pass').awesomePassword({left: 13});
+                ind = 1;
+            }
+        }
+      
+  
+      
+</script>
+</head>
+
+<body style="background: url('pic/background9.jpg') repeat;">
+    
+    <input id="addRow" type="button" value="addrowe">
+    <input id="removeRow" type="button" value="removeRow">
+    
+    <div onclick="show('none')" id="wrap" ></div>
+
+
+     
+    <div id="settingWin">
+    </div>
+    
+     
+    <div id="window">
+    </div>
+    
+       
+    <div id="tablewin">
+    </div> 
+
+</body>
+</html>
+
